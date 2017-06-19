@@ -1,12 +1,12 @@
 # lofives
 Gestural instruments using open sound control, C.H.I.P and SuperCollider.
 
-Need to enable rc.local in systemd on the CHIP:
+Need to enable lofives service in systemd on the CHIP:
 
-sudo cp rc-local.service /etc/systemd/system/rc-local.service 
-sudo chmod +x /etc/rc.local
-sudo systemctl enable rc-local
-sudo systemctl start rc-local.service
-sudo systemctl status rc-local.service
+sudo cp lofives.service /etc/systemd/system/lofives.service 
+sudo chmod +x /usr/local/bin/lofives
+sudo systemctl enable lofives
+sudo systemctl start lofives
+sudo systemctl status lofives
 
 
