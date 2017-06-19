@@ -1,6 +1,5 @@
 // ----------------------------------------------------------------------------------------------
 //   This file is part of LoFives - osc glove instrument software
-//   This runs on a platform that can run Supercollider and has WiFi 
 //
 //   LoFives is free software: you can redistribute it and/or modify it under the terms
 //   of the GNU General Public License as published by the Free Software Foundation, either
@@ -65,7 +64,7 @@ s.waitForBoot({
 
 	//GUI ////////////////////////////////////////////////////////////////////////////////////////////
 	var win;
-	var numPitch, numYaw, numRoll;
+	var numPitch, numYaw, numRoll, newPitch, newYaw, newRoll;
 	var knobPitch, knobPitchNum, knobPitchLabel, knobPitchSpec;
 	var knobPitchMin, knobPitchNumMin, knobPitchLabelMin, knobPitchSpecMin;
 	var knobRoll, knobRollNum, knobRollLabel, knobRollSpec;
@@ -74,13 +73,11 @@ s.waitForBoot({
 	var knobYawMin, knobYawNumMin, knobYawLabelMin, knobYawSpecMin;
 	var knobHand, knobHandSpec, knobHandLabel, knobHandNum;
 	var knobSensorNum, knobSensorLabel, knobSensorSpec, knobSensor;
-	var defaultFont, phraseFont, butFont, statusFont;
-	var defaultColor, defaultAlpha, defaultStringColor, defaultBtnColor, defaultBackColor, statusStringColor, statusBackColor;
 	var txtStatus, labMin, labMax;
 	var butPitch, togPitch, butRoll, togRoll, butYaw, togYaw, butRanVoice, togRanVoice;
 	var butOpen, butSave;
-	var rawNumLabel, knobsLabel;
-	var titleLabel,titleFont, footerLabel;
+	var rawNumLabel, knobsLabel, newNumLabel;
+	var titleLabel, footerLabel, helpLabel;
 
 	var fileSave, fileOpen, line;
 
@@ -91,7 +88,8 @@ s.waitForBoot({
 	var yrow5 = 440; //518
 	var yrow6 = 480; //560
 	var yrow7 = 620;
-	var yrow8 = 700;
+	var yrow8 = 680;
+	var yrow9 = 740;
 
 	var xcol1 = 50;
 	var xcol2 = 230;
@@ -108,20 +106,21 @@ s.waitForBoot({
 	var szNy = 25;
 	var szSld = 130;
 
-	titleFont = Font("Mono", 30, bold: true);
-	defaultFont =Font("Mono", 20, bold: true);
-	phraseFont = Font("Mono", 16, bold: true);
-	butFont = Font("Mono", 20, bold: true);
-	statusFont = Font("Mono", 20, bold: false);
+	var titleFont = Font("Mono", 30, bold: true);
+	var defaultFont =Font("Mono", 20, bold: true);
+	var phraseFont = Font("Mono", 16, bold: true);
+	var butFont = Font("Mono", 20, bold: true);
+	var statusFont = Font("Mono", 20, bold: false);
 
-	defaultColor = Color.new255(0,0,0);
-	defaultBackColor = Color.new255(0,0,0);
-	defaultStringColor = Color.green;
-	defaultBtnColor = Color.new255(255,0,0);
-	defaultAlpha = 1.0;
+	var defaultColor = Color.new255(0,0,0);
+	var defaultBackColor = Color.new255(0,0,0);
+	var defaultStringColor = Color.green;
+	var inStringColor = Color.red;
+	var defaultBtnColor = Color.new255(255,0,0);
+	var defaultAlpha = 1.0;
 
 	Window.closeAll;
-	win = Window.new("LoFives", Rect(0, 0, 950, 760));
+	win = Window.new("LoFives", Rect(0, 0, 950, 800));
 
 	win.onClose = {
 
@@ -173,23 +172,29 @@ s.waitForBoot({
 	win.alpha = defaultAlpha;
 
 	titleLabel = StaticText.new(win, Rect(xcol1, yrow1, szK*2, szNy*2));
-	titleLabel.string = " LOFives";
+	titleLabel.string = "LOFives";
 	titleLabel.align = \left;
 	titleLabel.font = titleFont;
 	titleLabel.stringColor = Color.new(255,255,255);
 
-	footerLabel = StaticText.new(win, Rect(xcol1, yrow8, szK*2, szNy*2));
-	footerLabel.string = " LOlux Studio";
+	helpLabel = StaticText.new(win, Rect(xcol1, yrow2-75, 230, 580));
+	helpLabel.string = "Start by moving the gloves through every possible range of motion.\n\nThis will initialise the raw in max and min values sent by the gloves.\n\nSelect each sensor in turn and set new max and min values.\n\nThis will remap the sensor readings to lie between the new max and min. \n\nThese should match the max and min values of the control you want the sensor to map in your music softs.\n\nNew remapped sensor values are sent out to localhost port 8000 (127.0.0.1:8000).\n\nOpen and save buttons are to load and store settings.";
+	helpLabel.align = \left;
+	helpLabel.font = phraseFont;
+	helpLabel.stringColor = Color.new(255,255,255);
+	
+	footerLabel = StaticText.new(win, Rect(xcol1, yrow9, 240, szNy));
+	footerLabel.string = "LOlux Studio";
 	footerLabel.align = \left;
 	footerLabel.font = phraseFont;
 	footerLabel.stringColor = Color.new(255,255,255);
 
 
 	rawNumLabel = StaticText.new(win, Rect(xcol2, yrow2, szK, 25));
-	rawNumLabel.string = "Raw";
+	rawNumLabel.string = "IN";
 	rawNumLabel.align = \right;
 	rawNumLabel.font = defaultFont;
-	rawNumLabel.stringColor = defaultStringColor;
+	rawNumLabel.stringColor = inStringColor;
 
 	//readings from osc
 	numPitch = StaticText.new(win, Rect(xcol3, yrow2, szK, szNy));
@@ -198,7 +203,7 @@ s.waitForBoot({
 	numPitch.align = \center;
 	numPitch.string = "-";
 	numPitch.font = defaultFont;
-	numPitch.stringColor = defaultStringColor;
+	numPitch.stringColor = inStringColor;
 
 	//readings from osc
 	numYaw = StaticText.new(win, Rect(xcol4, yrow2, szK, szNy));
@@ -207,7 +212,7 @@ s.waitForBoot({
 	numYaw.align = \center;
 	numYaw.string = "-";
 	numYaw.font = defaultFont;
-	numYaw.stringColor = defaultStringColor;
+	numYaw.stringColor = inStringColor;
 
 	//readings from osc
 	numRoll = StaticText.new(win, Rect(xcol5, yrow2, szK, szNy));
@@ -216,11 +221,11 @@ s.waitForBoot({
 	numRoll.align = \center;
 	numRoll.string = "-";
 	numRoll.font = defaultFont;
-	numRoll.stringColor = defaultStringColor;
+	numRoll.stringColor = inStringColor;
 
 	// rmap label
 	knobsLabel = StaticText.new(win, Rect(xcol2, yrow3, szK, 25));
-	knobsLabel.string = "Output";
+	knobsLabel.string = "Remap";
 	knobsLabel.align = \right;
 	knobsLabel.font = defaultFont;
 	knobsLabel.stringColor = defaultStringColor;
@@ -270,7 +275,7 @@ s.waitForBoot({
 
 	// Roll Knob /////////////////////////////////////////////////////////
 	knobRollSpec = ControlSpec(0, 127, 'lin', 1, 1, " ");
-	knobRoll = Knob.new(win, Rect(xcol4, yrow4, szK, szK))
+	knobRoll = Knob.new(win, Rect(xcol5, yrow4, szK, szK))
 	.action = {arg v;
 		var max = knobRollSpec.map(v.value);
 		knobRollNum.string = max;
@@ -278,7 +283,7 @@ s.waitForBoot({
 	};
 	knobRoll.value = knobRollSpec.unmap(knobRollSpec.default);
 
-	knobRollNum = StaticText.new(win, Rect((xcol4+xs), yrow5, szNx, szNy));
+	knobRollNum = StaticText.new(win, Rect((xcol5+xs), yrow5, szNx, szNy));
 	knobRollNum.background = defaultColor;
 	knobRollNum.alpha = defaultAlpha;
 	knobRollNum.align = \center;
@@ -287,7 +292,7 @@ s.waitForBoot({
 	knobRollNum.stringColor = defaultStringColor;
 
 	knobRollSpecMin = ControlSpec(0, -127, 'lin', 1, 0, " ");
-	knobRollMin = Knob.new(win, Rect(xcol4, yrow6, szK, szK))
+	knobRollMin = Knob.new(win, Rect(xcol5, yrow6, szK, szK))
 	.action = {arg v;
 		var min = knobRollSpecMin.map(v.value);
 		knobRollNumMin.string = min;
@@ -295,7 +300,7 @@ s.waitForBoot({
 	};
 	knobRollMin.value = knobRollSpecMin.unmap(knobRollSpecMin.default);
 
-	knobRollNumMin = StaticText.new(win, Rect((xcol4+xs), yrow7, szNx, szNy));
+	knobRollNumMin = StaticText.new(win, Rect((xcol5+xs), yrow7, szNx, szNy));
 	knobRollNumMin.background = defaultColor;
 	knobRollNumMin.alpha = defaultAlpha;
 	knobRollNumMin.align = \center;
@@ -303,7 +308,7 @@ s.waitForBoot({
 	knobRollNumMin.font = defaultFont;
 	knobRollNumMin.stringColor = defaultStringColor;
 
-	knobRollLabel = StaticText.new(win, Rect(xcol4, yrow3, szK, 25));
+	knobRollLabel = StaticText.new(win, Rect(xcol5, yrow3, szK, 25));
 	knobRollLabel.string = "Z Axis";
 	knobRollLabel.align = \center;
 	knobRollLabel.font = defaultFont;
@@ -311,7 +316,7 @@ s.waitForBoot({
 
 	// Yaw Knob /////////////////////////////////////////////////////////
 	knobYawSpec = ControlSpec(0, 127, 'lin', 1, 1, " ");
-	knobYaw = Knob.new(win, Rect(xcol5, yrow4, szK, szK))
+	knobYaw = Knob.new(win, Rect(xcol4, yrow4, szK, szK))
 	.action = {arg v;
 		var max = knobYawSpec.map(v.value);
 		knobYawNum.string = max;
@@ -319,7 +324,7 @@ s.waitForBoot({
 	};
 	knobYaw.value = knobYawSpec.unmap(knobYawSpec.default);
 
-	knobYawNum = StaticText.new(win, Rect((xcol5+xs), yrow5, szNx, szNy));
+	knobYawNum = StaticText.new(win, Rect((xcol4+xs), yrow5, szNx, szNy));
 	knobYawNum.background = defaultColor;
 	knobYawNum.alpha = defaultAlpha;
 	knobYawNum.align = \center;
@@ -328,7 +333,7 @@ s.waitForBoot({
 	knobYawNum.stringColor = defaultStringColor;
 
 	knobYawSpecMin = ControlSpec(0, -127, 'lin', 1, 0, " ");
-	knobYawMin = Knob.new(win, Rect(xcol5, yrow6, szK, szK))
+	knobYawMin = Knob.new(win, Rect(xcol4, yrow6, szK, szK))
 	.action = {arg v;
 		var min = knobYawSpecMin.map(v.value);
 		knobYawNumMin.string = min;
@@ -336,7 +341,7 @@ s.waitForBoot({
 	};
 	knobYawMin.value = knobYawSpecMin.unmap(knobYawSpecMin.default);
 
-	knobYawNumMin = StaticText.new(win, Rect((xcol5+xs), yrow7, szNx, szNy));
+	knobYawNumMin = StaticText.new(win, Rect((xcol4+xs), yrow7, szNx, szNy));
 	knobYawNumMin.background = defaultColor;
 	knobYawNumMin.alpha = defaultAlpha;
 	knobYawNumMin.align = \center;
@@ -344,12 +349,13 @@ s.waitForBoot({
 	knobYawNumMin.font = defaultFont;
 	knobYawNumMin.stringColor = defaultStringColor;
 
-	knobYawLabel = StaticText.new(win, Rect(xcol5, yrow3, szK, 25));
+	knobYawLabel = StaticText.new(win, Rect(xcol4, yrow3, szK, 25));
 	knobYawLabel.string = "Y Axis";
 	knobYawLabel.align = \center;
 	knobYawLabel.font = defaultFont;
 	knobYawLabel.stringColor = defaultStringColor;
 
+	//
 	labMax = StaticText.new(win, Rect(xcol2, yrow5, szK, 25));
 	labMax.string = "Max";
 	labMax.align = \right;
@@ -361,6 +367,39 @@ s.waitForBoot({
 	labMin.align = \right;
 	labMin.font = defaultFont;
 	labMin.stringColor = defaultStringColor;
+	
+	newNumLabel = StaticText.new(win, Rect(xcol2, yrow8, szK, 25));
+	newNumLabel.string = "OUT";
+	newNumLabel.align = \right;
+	newNumLabel.font = defaultFont;
+	newNumLabel.stringColor = defaultStringColor;
+	
+	//readings from osc
+	newPitch = StaticText.new(win, Rect(xcol3, yrow8, szK, szNy));
+	newPitch.background = defaultColor;
+	newPitch.alpha = defaultAlpha;
+	newPitch.align = \center;
+	newPitch.string = "-";
+	newPitch.font = defaultFont;
+	newPitch.stringColor = defaultStringColor;
+
+	//readings from osc
+	newYaw = StaticText.new(win, Rect(xcol4, yrow8, szK, szNy));
+	newYaw.background = defaultColor;
+	newYaw.alpha = defaultAlpha;
+	newYaw.align = \center;
+	newYaw.string = "-";
+	newYaw.font = defaultFont;
+	newYaw.stringColor = defaultStringColor;
+
+	//readings from osc
+	newRoll = StaticText.new(win, Rect(xcol5, yrow8, szK, szNy));
+	newRoll.background = defaultColor;
+	newRoll.alpha = defaultAlpha;
+	newRoll.align = \center;
+	newRoll.string = "-";
+	newRoll.font = defaultFont;
+	newRoll.stringColor = defaultStringColor;
 
 	//right hand
 	OSCdef(\rfusqx, { arg msg, time, addr, recvPort; right_hand_raw[0][0] = msg[1] }, '/gx/r/fusqX');
@@ -487,13 +526,13 @@ s.waitForBoot({
     });
 
 	// Open and Save presets //////////////////////////////////////////////////
-	butOpen = Button(win, Rect(xcol3+100, yrow8, 120, xs))
+	butOpen = Button(win, Rect(xcol3+100, yrow9, 120, xs))
         .states_([
             ["Open", Color.black],
 		    ["Open", Color.red]
         ])
         .action_({ arg butt;
-		if (butt.value == 0, {
+		if (butt.value == 1, {
 			// open a csv file and restore left and right hand arrays, one each line
 			Dialog.openPanel({arg path;
 				fileOpen = CSVFileReader.readInterpret(path).postcs;
@@ -533,7 +572,7 @@ s.waitForBoot({
 	butOpen.font = butFont;
 
 
-	butSave = Button(win, Rect(xcol4+100, yrow8, 120, xs))
+	butSave = Button(win, Rect(xcol4+100, yrow9, 120, xs))
         .states_([
             ["Save", Color.black],
 		    ["Save", Color.red]
@@ -610,16 +649,21 @@ s.waitForBoot({
 			    lPitchSpec = ControlSpec(left_hand_raw[sensor][3],left_hand_raw[sensor][6], \lin, 0.01, 0, "");
 				lYawSpec = ControlSpec(left_hand_raw[sensor][4],left_hand_raw[sensor][7], \lin, 0.01, 0, "");
 				lRollSpec = ControlSpec(left_hand_raw[sensor][5],left_hand_raw[sensor][8], \lin, 0.01, 0, "");
+				
+				newrPitchSpec = ControlSpec(right_hand_new[sensor][3], right_hand_new[sensor][6], \lin, 0.01, 0, "");
+				newrYawSpec = ControlSpec(right_hand_new[sensor][4], right_hand_new[sensor][7], \lin, 0.01, 0, "");
+				newrRollSpec = ControlSpec(right_hand_new[sensor][5], right_hand_new[sensor][8], \lin, 0.01, 0, "");
 
 				//map raw values to new range want to be able to set the final output spec...
 				// this maps values to 0 to 1
-				left_hand_raw[sensor][0] = lPitchSpec.unmap(left_hand_raw[sensor][0]);
-				left_hand_raw[sensor][1] = lYawSpec.unmap(left_hand_raw[sensor][1]);
-				left_hand_raw[sensor][2] = lRollSpec.unmap(left_hand_raw[sensor][2]);
+				left_hand_raw[sensor][0] = newlPitchSpec.map(lPitchSpec.unmap(left_hand_raw[sensor][0]));
+				left_hand_raw[sensor][1] = newlPitchSpec.map(lYawSpec.unmap(left_hand_raw[sensor][1]));
+				left_hand_raw[sensor][2] = newlPitchSpec.map(lRollSpec.unmap(left_hand_raw[sensor][2]));
 
-				//left_hand_raw[sensor][0].postln;
-				//left_hand_raw[sensor][1].postln;
-				//left_hand_raw[sensor][2].postln;
+				{newPitch.string = left_hand_new[sensor][0].trunc(0.001)}.defer(0);
+				{newYaw.string = left_hand_new[sensor][1].trunc(0.001)}.defer(0);
+				{newRoll.string = left_hand_new[sensor][2].trunc(0.001)}.defer(0);
+				
 			});
 
 			//right hand
@@ -650,10 +694,11 @@ s.waitForBoot({
 				right_hand_new[sensor][0] = newrPitchSpec.map(rPitchSpec.unmap(right_hand_raw[sensor][0]) );
 				right_hand_new[sensor][1] = newrYawSpec.map(rYawSpec.unmap(right_hand_raw[sensor][1]));
 				right_hand_new[sensor][2] = newrRollSpec.map(rRollSpec.unmap(right_hand_raw[sensor][2]));
+				
+				{newPitch.string = right_hand_new[sensor][0].trunc(0.001)}.defer(0);
+				{newYaw.string = right_hand_new[sensor][1].trunc(0.001)}.defer(0);
+				{newRoll.string = right_hand_new[sensor][2].trunc(0.001)}.defer(0);
 
-				//right_hand_new[sensor][0].postln;
-				//right_hand_new[sensor][1].postln;
-				//right_hand_new[sensor][2].postln;
 
 			});
 
@@ -704,4 +749,6 @@ s.waitForBoot({
 		});
 	}.fork;
 });
+
+
 
