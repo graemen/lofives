@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# This file lives in /usr/local/bin
+# wait for 60 seconds to make sure network is up
+# then run the code to read imu and send osc out 
+sleep 60
+cd /home/chip/bin
+/usr/bin/python ./gloves3.py -s 192.168.0.26 -p 57120 -t 0.1
