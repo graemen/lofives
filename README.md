@@ -11,11 +11,14 @@ Dependencies:
 
 Enable lofives service in systemd on the CHIP:
 
+- cp gloves.py /home/chip/bin/
 - sudo cp lofives.service /etc/systemd/system/lofives.service 
 - sudo chmod +x /usr/local/bin/lofives
 - sudo systemctl enable lofives
 - sudo systemctl start lofives
 - sudo systemctl status lofives
+
+Edit /usr/local/bin/lofives to connec tto correct host IP (gloves.py -s flag)
 
 ## Install on Host
 
