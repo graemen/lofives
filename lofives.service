@@ -1,10 +1,13 @@
+
 [Unit]
 Description=LoFives Wearable OSC Instrument Interface
 ConditionFileIsExecutable=/usr/local/bin/lofives
+After=network.online.target
+Requires=network.online.target
 
 [Service]
 Type=simple
 ExecStart=/usr/local/bin/lofives
 
 [Install]
-WantedBy=network-online.target
+WantedBy=multi-user.target
