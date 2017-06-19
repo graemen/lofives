@@ -1,5 +1,6 @@
 // ----------------------------------------------------------------------------------------------
 //   This file is part of LoFives - osc glove instrument software
+//   This runs on a platform that can run Supercollider and has WiFi 
 //
 //   LoFives is free software: you can redistribute it and/or modify it under the terms
 //   of the GNU General Public License as published by the Free Software Foundation, either
