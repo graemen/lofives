@@ -32,6 +32,8 @@ s.waitForBoot({
 
 	var synthGloves;
 	var run = true;
+	var status = "OFF";
+	var strStatus;
 
 	// OSC server
 	var setOSC, sendOSC;
@@ -184,7 +186,7 @@ s.waitForBoot({
 	titleLabel.stringColor = Color.new(255,255,255);
 
 	helpLabel = StaticText.new(win, Rect(xcol1, yrow2-75, 230, 580));
-	helpLabel.string = "Move the gloves through the range of motion you want to use for each axis.\n\nThis will initialise the max and min values sent by the gloves (Input).\n\nSet the sensor max and min so the value of Send are 1 and 0 at the extremes of each range of motion.\n\nThis will remap the sensor readings to use the full range of the control that is mapped in your music software. \n\nNew remapped sensor values are sent to localhost port 8000 (127.0.0.1:8000).\n\nThe load and save buttons are to restore and save the min max settings.";
+	helpLabel.string = "Move the gloves through the range of motion you want to use for each axis.\n\nThis will initialise the max and min values sent by the gloves (Input).\n\nSet the sensor max and min so the value of Send is 1 and 0 at the extremes of each range of motion.\n\nThis will remap the sensor readings to use the full range of the control that is mapped in your music software. \n\nNew remapped sensor values are sent to localhost port 8000 (127.0.0.1:8000).\n\nThe load and save buttons are to restore and save the min max settings.";
 	helpLabel.align = \left;
 	helpLabel.font = phraseFont;
 	helpLabel.stringColor = Color.new(255,255,255);
@@ -229,14 +231,14 @@ s.waitForBoot({
 	numRoll.font = defaultFont;
 	numRoll.stringColor = defaultStringColor;
 
-	/*
-	// rmap label
-	knobsLabel = StaticText.new(win, Rect(xcol2, yrow3, szK, 25));
-	knobsLabel.string = "Invert";
-	knobsLabel.align = \right;
-	knobsLabel.font = defaultFont;
-	knobsLabel.stringColor = defaultStringColor;
-	*/
+
+	// status label
+	strStatus = StaticText.new(win, Rect(xcol2, yrow3, szK, 25));
+	strStatus.string = "OFF";
+	strStatus.align = \right;
+	strStatus.font = defaultFont;
+	strStatus.stringColor = defaultStringColor;
+
 
 	// Pitch Knob /////////////////////////////////////////////////////////
 	butPitch = Button(win, Rect(xcol4-50, yrow3, 20, 20))
@@ -250,7 +252,7 @@ s.waitForBoot({
 		});
 	butPitch.font = butFont;
 
-	knobPitchSpec = ControlSpec(0, 2, 'lin', 0.01, 1, " ");
+	knobPitchSpec = ControlSpec(-1, 2, 'lin', 0.01, 1, " ");
 	knobPitch = Knob.new(win, Rect(xcol3, yrow4, szK, szK))
 	.action = {arg v;
 		var max = knobPitchSpec.map(v.value);
@@ -268,7 +270,7 @@ s.waitForBoot({
 	knobPitchNum.font = defaultFont;
 	knobPitchNum.stringColor = defaultStringColor;
 
-	knobPitchSpecMin = ControlSpec(0, -1, 'lin', 0.01, 0, " ");
+	knobPitchSpecMin = ControlSpec(-1, 1, 'lin', 0.01, 0, " ");
 	knobPitchMin = Knob.new(win, Rect(xcol3, yrow6, szK, szK))
 	.action = {arg v;
 		var min = knobPitchSpecMin.map(v.value);
@@ -304,7 +306,7 @@ s.waitForBoot({
 		});
 	butRoll.font = butFont;
 
-	knobRollSpec = ControlSpec(0, 2, 'lin', 0.01, 1, " ");
+	knobRollSpec = ControlSpec(-1, 2, 'lin', 0.01, 1, " ");
 	knobRoll = Knob.new(win, Rect(xcol5, yrow4, szK, szK))
 	.action = {arg v;
 		var max = knobRollSpec.map(v.value);
@@ -321,7 +323,7 @@ s.waitForBoot({
 	knobRollNum.font = defaultFont;
 	knobRollNum.stringColor = defaultStringColor;
 
-	knobRollSpecMin = ControlSpec(0, -1, 'lin', 0.01, 0, " ");
+	knobRollSpecMin = ControlSpec(-1, 1, 'lin', 0.01, 0, " ");
 	knobRollMin = Knob.new(win, Rect(xcol5, yrow6, szK, szK))
 	.action = {arg v;
 		var min = knobRollSpecMin.map(v.value);
@@ -356,7 +358,7 @@ s.waitForBoot({
 		});
 	butYaw.font = butFont;
 
-	knobYawSpec = ControlSpec(0, 2, 'lin', 0.01, 1, " ");
+	knobYawSpec = ControlSpec(-1, 2, 'lin', 0.01, 1, " ");
 	knobYaw = Knob.new(win, Rect(xcol4, yrow4, szK, szK))
 	.action = {arg v;
 		var max = knobYawSpec.map(v.value);
@@ -373,7 +375,7 @@ s.waitForBoot({
 	knobYawNum.font = defaultFont;
 	knobYawNum.stringColor = defaultStringColor;
 
-	knobYawSpecMin = ControlSpec(0, -1, 'lin', 0.01, 0, " ");
+	knobYawSpecMin = ControlSpec(-1, 1, 'lin', 0.01, 0, " ");
 	knobYawMin = Knob.new(win, Rect(xcol4, yrow6, szK, szK))
 	.action = {arg v;
 		var min = knobYawSpecMin.map(v.value);
@@ -442,6 +444,8 @@ s.waitForBoot({
 	newRoll.font = defaultFont;
 	newRoll.stringColor = altStringColor;
 
+	//status
+	OSCdef(\status, { arg msg, time, addr, recvPort; status = msg[2] }, '/gx/status');
 
 	//right hand
 	OSCdef(\rfusx, { arg msg, time, addr, recvPort; right_hand_raw[0][0] = msg[1] }, '/gx/r/fusX');
@@ -487,34 +491,44 @@ s.waitForBoot({
 	OSCdef(\lfusqz, { arg msg, time, addr, recvPort; left_hand_raw[4][2] = msg[1] }, '/gx/l/fusqZ');
 	//OSCdef(\fuseqa, { arg msg, time, addr, recvPort; { msg[1].postln}.defer(0); }, '/gx/l/fusqA');
 
+	OSCdef(\status).enable;
+
 	OSCdef(\rfusqx).enable;
-	OSCdef(\rfusqx).enable;
-	OSCdef(\rfusqx).enable;
+	OSCdef(\rfusqy).enable;
+	OSCdef(\rfusqz).enable;
+
 	OSCdef(\rfusx).enable;
-	OSCdef(\rfusx).enable;
-	OSCdef(\rfusx).enable;
+	OSCdef(\rfusy).enable;
+	OSCdef(\rfusz).enable;
+
 	OSCdef(\rgyrx).enable;
 	OSCdef(\rgyry).enable;
 	OSCdef(\rgyrz).enable;
+
 	OSCdef(\raccx).enable;
 	OSCdef(\raccy).enable;
 	OSCdef(\raccz).enable;
+
 	OSCdef(\rmagx).enable;
 	OSCdef(\rmagy).enable;
 	OSCdef(\rmagz).enable;
 
 	OSCdef(\lfusqx).enable;
-	OSCdef(\lfusqx).enable;
-	OSCdef(\lfusqx).enable;
+	OSCdef(\lfusqy).enable;
+	OSCdef(\lfusqz).enable;
+
 	OSCdef(\lfusx).enable;
-	OSCdef(\lfusx).enable;
-	OSCdef(\lfusx).enable;
+	OSCdef(\lfusy).enable;
+	OSCdef(\lfusz).enable;
+
 	OSCdef(\lgyrx).enable;
 	OSCdef(\lgyry).enable;
 	OSCdef(\lgyrz).enable;
+
 	OSCdef(\laccx).enable;
 	OSCdef(\laccy).enable;
 	OSCdef(\laccz).enable;
+
 	OSCdef(\lmagx).enable;
 	OSCdef(\lmagy).enable;
 	OSCdef(\lmagz).enable;
@@ -583,7 +597,7 @@ s.waitForBoot({
 	butOpen = Button(win, Rect(xcol5, yrow1, szK, xs))
         .states_([
             ["Load", Color.black],
-		    ["Load", Color.red]
+		    ["Load", Color.black]
         ])
         .action_({ arg butt;
 		if (butt.value == 1, {
@@ -618,6 +632,23 @@ s.waitForBoot({
 					});
 					line = line + 1;
 				});
+				if (hand == 0, {
+					{knobPitch.valueAction = knobPitchSpec.unmap(right_hand_new[sensor][6])}.defer(0);
+					{knobPitchMin.valueAction = knobPitchSpecMin.unmap(right_hand_new[sensor][3])}.defer(0);
+					{knobYaw.valueAction = knobYawSpec.unmap(right_hand_new[sensor][7])}.defer(0);
+					{knobYawMin.valueAction = knobYawSpecMin.unmap(right_hand_new[sensor][4])}.defer(0);
+					{knobRoll.valueAction = knobRollSpec.unmap(right_hand_new[sensor][8])}.defer(0);
+					{knobRollMin.valueAction = knobRollSpecMin.unmap(right_hand_new[sensor][5])}.defer(0);
+
+				});
+				if (hand == 1, {
+					{knobPitch.valueAction = knobPitchSpec.unmap(left_hand_new[sensor][6])}.defer(0);
+					{knobPitchMin.valueAction = knobPitchSpecMin.unmap(left_hand_new[sensor][3])}.defer(0);
+					{knobYaw.valueAction = knobYawSpec.unmap(left_hand_new[sensor][7])}.defer(0);
+					{knobYawMin.valueAction = knobYawSpecMin.unmap(left_hand_new[sensor][4])}.defer(0);
+					{knobRoll.valueAction = knobRollSpec.unmap(left_hand_new[sensor][8])}.defer(0);
+					{knobRollMin.valueAction = knobRollSpecMin.unmap(left_hand_new[sensor][5])}.defer(0);
+				});
 
 			});
 
@@ -629,7 +660,7 @@ s.waitForBoot({
 	butSave = Button(win, Rect(xcol5, yrow1+45, szK, xs))
         .states_([
             ["Save", Color.black],
-		    ["Save", Color.red]
+		    ["Save", Color.black]
         ])
         .action_({ arg butt;
 		if (butt.value == 1, {
@@ -657,6 +688,7 @@ s.waitForBoot({
 					fileSave.write("" ++ sensor[6] ++ "," ++ sensor[7] ++ "," ++ sensor[8] ++ "\n");
 					});
 				fileSave.close;
+
 			});
 		});
 		});
@@ -685,6 +717,8 @@ s.waitForBoot({
 			// poll interval for sending osc
 			wait(oscInterval);
 
+			{strStatus.string = status}.defer(0);
+
 			// left hand
 			if (hand == 1, {
 			    //update display
@@ -701,20 +735,36 @@ s.waitForBoot({
 					if (left_hand_raw[sensor][1] < left_hand_raw[sensor][4], {left_hand_raw[sensor][4] = left_hand_raw[sensor][1]});
 					if (left_hand_raw[sensor][2] > left_hand_raw[sensor][8], {left_hand_raw[sensor][8] = left_hand_raw[sensor][2]});
 					if (left_hand_raw[sensor][2] < left_hand_raw[sensor][5], {left_hand_raw[sensor][5] = left_hand_raw[sensor][2]});
+
 					//map raw values to new range
-					lPitchSpec = ControlSpec(left_hand_raw[sensor][3],left_hand_raw[sensor][6], \lin, 0.01, 0, "");
-					lYawSpec = ControlSpec(left_hand_raw[sensor][4],left_hand_raw[sensor][7], \lin, 0.01, 0, "");
-					lRollSpec = ControlSpec(left_hand_raw[sensor][5],left_hand_raw[sensor][8], \lin, 0.01, 0, "");
+					if (invertPitch == true, {
+						lPitchSpec = ControlSpec(left_hand_raw[sensor][3],left_hand_raw[sensor][6], \lin, 0.01, 0, "");
+						newlPitchSpec = ControlSpec(left_hand_new[sensor][3], left_hand_new[sensor][6], \lin, 0.01, 0, "");
+					},{
+						lPitchSpec = ControlSpec(left_hand_raw[sensor][3],left_hand_raw[sensor][6], \lin, 0.01, 0, "");
+						newlPitchSpec = ControlSpec(left_hand_new[sensor][3], left_hand_new[sensor][6], \lin, 0.01, 0, "");
+					});
 
-					newrPitchSpec = ControlSpec(right_hand_new[sensor][3], right_hand_new[sensor][6], \lin, 0.01, 0, "");
-					newrYawSpec = ControlSpec(right_hand_new[sensor][4], right_hand_new[sensor][7], \lin, 0.01, 0, "");
-					newrRollSpec = ControlSpec(right_hand_new[sensor][5], right_hand_new[sensor][8], \lin, 0.01, 0, "");
+					if (invertYaw == true, {
+						lYawSpec = ControlSpec(left_hand_raw[sensor][4],left_hand_raw[sensor][7], \lin, 0.01, 0, "");
+						newlYawSpec = ControlSpec(left_hand_new[sensor][4], left_hand_new[sensor][7], \lin, 0.01, 0, "");
+					},{
+						lYawSpec = ControlSpec(left_hand_raw[sensor][4],left_hand_raw[sensor][7], \lin, 0.01, 0, "");
+						newlYawSpec = ControlSpec(left_hand_new[sensor][4], left_hand_new[sensor][7], \lin, 0.01, 0, "");
+					});
 
-					//map raw values to new range want to be able to set the final output spec...
-					// this maps values to 0 to 1
+					if (invertRoll == true, {
+						lRollSpec = ControlSpec(left_hand_raw[sensor][5],left_hand_raw[sensor][8], \lin, 0.01, 0, "");
+						newlRollSpec = ControlSpec(left_hand_new[sensor][5], left_hand_new[sensor][8], \lin, 0.01, 0, "");
+					},{
+						lRollSpec = ControlSpec(left_hand_raw[sensor][5],left_hand_raw[sensor][8], \lin, 0.01, 0, "");
+						newlRollSpec = ControlSpec(left_hand_new[sensor][5], left_hand_new[sensor][8], \lin, 0.01, 0, "");
+					});
+
+					// set all sensor values
 					left_hand_raw[sensor][0] = newlPitchSpec.map(lPitchSpec.unmap(left_hand_raw[sensor][0]));
-					left_hand_raw[sensor][1] = newlPitchSpec.map(lYawSpec.unmap(left_hand_raw[sensor][1]));
-					left_hand_raw[sensor][2] = newlPitchSpec.map(lRollSpec.unmap(left_hand_raw[sensor][2]));
+					left_hand_raw[sensor][1] = newlYawSpec.map(lYawSpec.unmap(left_hand_raw[sensor][1]));
+					left_hand_raw[sensor][2] = newlRollSpec.map(lRollSpec.unmap(left_hand_raw[sensor][2]));
 				});
 
 				{newPitch.string = left_hand_new[sensor][0].trunc(0.001)}.defer(0);
@@ -742,13 +792,29 @@ s.waitForBoot({
 
 
 					// calc specs for remapping
-					rPitchSpec = ControlSpec(right_hand_raw[sensor][3],right_hand_raw[sensor][6], \lin, 0.01, 0, "");
-					rYawSpec = ControlSpec(right_hand_raw[sensor][4],right_hand_raw[sensor][7], \lin, 0.01, 0, "");
-					rRollSpec = ControlSpec(right_hand_raw[sensor][5],right_hand_raw[sensor][8], \lin, 0.01, 0, "");
+					if (invertPitch == true, {
+						rPitchSpec = ControlSpec(right_hand_raw[sensor][3],right_hand_raw[sensor][6], \lin, 0.01, 0, "");
+						newrPitchSpec = ControlSpec(right_hand_new[sensor][3], right_hand_new[sensor][6], \lin, 0.01, 0, "");
+					},{
+						rPitchSpec = ControlSpec(right_hand_raw[sensor][3],right_hand_raw[sensor][6], \lin, 0.01, 0, "");
+						newrPitchSpec = ControlSpec(right_hand_new[sensor][3], right_hand_new[sensor][6], \lin, 0.01, 0, "");
+					});
 
-					newrPitchSpec = ControlSpec(right_hand_new[sensor][3], right_hand_new[sensor][6], \lin, 0.01, 0, "");
-					newrYawSpec = ControlSpec(right_hand_new[sensor][4], right_hand_new[sensor][7], \lin, 0.01, 0, "");
-					newrRollSpec = ControlSpec(right_hand_new[sensor][5], right_hand_new[sensor][8], \lin, 0.01, 0, "");
+					if (invertYaw == true, {
+						rYawSpec = ControlSpec(right_hand_raw[sensor][4],right_hand_raw[sensor][7], \lin, 0.01, 0, "");
+						newrYawSpec = ControlSpec(right_hand_new[sensor][4], right_hand_new[sensor][7], \lin, 0.01, 0, "");
+					},{
+						rYawSpec = ControlSpec(right_hand_raw[sensor][4],right_hand_raw[sensor][7], \lin, 0.01, 0, "");
+						newrYawSpec = ControlSpec(right_hand_new[sensor][4], right_hand_new[sensor][7], \lin, 0.01, 0, "");
+					});
+
+					if (invertRoll == true, {
+						rRollSpec = ControlSpec(right_hand_raw[sensor][5],right_hand_raw[sensor][8], \lin, 0.01, 0, "");
+						newrRollSpec = ControlSpec(right_hand_new[sensor][5], right_hand_new[sensor][8], \lin, 0.01, 0, "");
+					},{
+						rRollSpec = ControlSpec(right_hand_raw[sensor][5],right_hand_raw[sensor][8], \lin, 0.01, 0, "");
+						newrRollSpec = ControlSpec(right_hand_new[sensor][5], right_hand_new[sensor][8], \lin, 0.01, 0, "");
+					});
 
 					//set all sensor new values
 					right_hand_new[sensor][0] = newrPitchSpec.map(rPitchSpec.unmap(right_hand_raw[sensor][0]) );
@@ -824,6 +890,5 @@ s.waitForBoot({
 		});
 	}.fork;
 });
-
 
 
