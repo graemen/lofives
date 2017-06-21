@@ -211,7 +211,8 @@ def main(argv):
     	poll_interval = (imu.IMUGetPollInterval())*1.0/1000.0
 
     print "- Transmit OSC to ", server, ":", port
-
+    liblo.send(target, "/gx/status", 0, "ON")
+    
     while(run):
         if imu.IMURead():
             read_imu(imu, target)
