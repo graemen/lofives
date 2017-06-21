@@ -79,14 +79,14 @@ s.waitForBoot({
 	var rawNumLabel, knobsLabel, newNumLabel;
 	var titleLabel, footerLabel, helpLabel;
 
-	var invertPitch = False;
-	var invertYaw = False;
-	var invertRoll = False;
+	var invertPitch = false;
+	var invertYaw = false;
+	var invertRoll = false;
 
 	var fileSave, fileOpen;
 	var line;
 
-	var modeLearn = False;
+	var modeLearn = false;
 
 	var yrow1 = 20;
 	var yrow2 = 200; // moved to after 6 and before 7
@@ -574,8 +574,8 @@ s.waitForBoot({
 		    ["Map", Color.red]
         ])
         .action_({ arg butt;
-		if (butt.value == 1, {modeLearn = True});
-		if (butt.value == 0, {modeLearn = False});
+		if (butt.value == 1, {modeLearn = true});
+		if (butt.value == 0, {modeLearn = false});
 		});
 	butLearn.font = butFont;
 
@@ -768,10 +768,14 @@ s.waitForBoot({
 			// send remapped sensors out as osc
 
 			//right hand
-			oscTx.sendMsg("/L5/R/PosX", right_hand_new[0][0] );
-			oscTx.sendMsg("/L5/R/PosY", right_hand_new[0][1] );
-			oscTx.sendMsg("/L5/R/PosZ", right_hand_new[0][2] );
+			oscTx.sendMsg("/L5/Right/PosX", right_hand_new[0][0] );
+			if(modeLearn, {wait(oscInterval*5)});
+			oscTx.sendMsg("/L5/Right/PosY", right_hand_new[0][1] );
+			if(modeLearn, {wait(oscInterval*5)});
+			oscTx.sendMsg("/L5/Right/PosZ", right_hand_new[0][2] );
+			if(modeLearn, {wait(oscInterval*5)});
 
+			/*
 			oscTx.sendMsg("/L5/R/GyrX", right_hand_new[1][0] );
 			oscTx.sendMsg("/L5/R/GyrY", right_hand_new[1][1] );
 			oscTx.sendMsg("/L5/R/GyrZ", right_hand_new[1][2] );
@@ -784,16 +788,20 @@ s.waitForBoot({
 			oscTx.sendMsg("/L5/R/MagY", right_hand_new[3][1] );
 			oscTx.sendMsg("/L5/R/MagZ", right_hand_new[3][2] );
 
-			//oscTx.sendMsg("/L5/R/QFusx", right_hand_new[4][0] );
-			//oscTx.sendMsg("/L5/R/QFusY", right_hand_new[4][1] );
-			//oscTx.sendMsg("/L5/R/QFusZ", right_hand_new[4][2] );
-
+			oscTx.sendMsg("/L5/R/QFusx", right_hand_new[4][0] );
+			oscTx.sendMsg("/L5/R/QFusY", right_hand_new[4][1] );
+			oscTx.sendMsg("/L5/R/QFusZ", right_hand_new[4][2] );
+			*/
 
 			//left hand
-			oscTx.sendMsg("/L5/L/PosX", left_hand_new[0][0] );
-			oscTx.sendMsg("/L5/L/PosY", left_hand_new[0][1] );
-			oscTx.sendMsg("/L5/L/PosZ", left_hand_new[0][2] );
+			oscTx.sendMsg("/L5/Left/PosX", left_hand_new[0][0] );
+			if(modeLearn, {wait(oscInterval*5)});
+			oscTx.sendMsg("/L5/Left/PosY", left_hand_new[0][1] );
+			if(modeLearn, {wait(oscInterval*5)});
+			oscTx.sendMsg("/L5/Left/PosZ", left_hand_new[0][2] );
+			if(modeLearn, {wait(oscInterval*5)});
 
+			/*
 			oscTx.sendMsg("/L5/L/GyrX", left_hand_new[1][0] );
 			oscTx.sendMsg("/L5/L/GyrY", left_hand_new[1][1] );
 			oscTx.sendMsg("/l5/L/GyrZ", left_hand_new[1][2] );
@@ -809,10 +817,13 @@ s.waitForBoot({
 			//oscTx.sendMsg("/L5/L/QFusX", left_hand_new[4][0] );
 			//oscTx.sendMsg("/L5/L/QFusY", left_hand_new[4][1] );
 			//oscTx.sendMsg("/L5/L/QFusZ", left_hand_new[4][2] );
+			*/
 
 			//synthGloves = Synth(\gloves,[\freq, luxSecFreq, \amp, luxAmp]).run(luxSigSin);
 
 		});
 	}.fork;
 });
+
+
 
