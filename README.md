@@ -4,8 +4,8 @@ Glove instruments using open sound control, C.H.I.P and SuperCollider .
 ## Install on CHIP
 
 Dependencies:
-- liblo http://das.nasophon.de/pyliblo/
-- numpy http://www.numpy.org/
+- sudo apt-get install liblo-dev python-dev cython build-essential python-numpy
+- python liblo http://das.nasophon.de/pyliblo/
 - RTIMULib https://github.com/RPi-Distro/RTIMULib and follow the python install instructions: https://github.com/RPi-Distro/RTIMULib/tree/master/Linux/python
 - CHIP_IO https://github.com/xtacocorex/CHIP_IO
 
