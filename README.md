@@ -6,7 +6,7 @@ Glove instruments using open sound control, C.H.I.P and SuperCollider .
 Dependencies:
 - liblo http://das.nasophon.de/pyliblo/
 - numpy http://www.numpy.org/
-- RTIMULib https://github.com/RPi-Distro/RTIMULib 
+- RTIMULib https://github.com/RPi-Distro/RTIMULib and follow the python install instructions: https://github.com/RPi-Distro/RTIMULib/tree/master/Linux/python
 - CHIP_IO https://github.com/xtacocorex/CHIP_IO
 
 Enable lofives service in systemd on the CHIP:
